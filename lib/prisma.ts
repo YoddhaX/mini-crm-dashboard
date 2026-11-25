@@ -1,0 +1,21 @@
+import { PrismaClient } from "@prisma/client";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
+import path from "path";
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+function createPrismaClient() {
+  // Resolve absolute path to the SQLite database
+  const dbPath = path.resolve(process.cwd(), "prisma", "dev.db");
+  // PrismaLibSql takes a Config object with url
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const adapter = new PrismaLibSql({ url: `file://${dbPath}` } as any);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return new PrismaClient({ adapter } as any);
+}
+
+export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
